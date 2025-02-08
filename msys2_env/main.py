@@ -1,5 +1,8 @@
 from pathlib import Path
 import subprocess
+import argparse
+import os
+import shutil
 
 CURRENT = Path(__file__).resolve().parent
 cache_dir = Path.home().joinpath(".cache").joinpath("msys2_env")
@@ -47,6 +50,34 @@ def init():
     subprocess.run(msys2_command("bash -c exit"), check=True)
 
 
+def create_venv(name: str):
+    cwd = os.getcwd()
+    venv_path = Path(cwd).resolve().joinpath(name)
+    if venv_path.exists():
+        # print("Err: venv already exists")
+        exit()
+    venv_path.mkdir(parents=True)
+    msys_folder = release.joinpath("msys64")
+
+    shutil.copytree(msys_folder, venv_path.joinpath("data"))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--init", action="store_true", default=False, help="download and init msys2"
+    )
+
+    parser.add_argument("--venv", type=str, default=".venv2", help="venv name")
+
+    args = parser.parse_args()
+
+    if args.init:
+        download_msys()
+        init()
+
+    create_venv(args.venv)
+
+
 if __name__ == "__main__":
-    download_msys()
-    init()
+    main()
