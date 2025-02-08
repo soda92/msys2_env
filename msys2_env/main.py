@@ -15,6 +15,7 @@ def CD(d: Path):
 
 
 CURRENT = Path(__file__).resolve().parent
+# ref: https://github.com/bleachbit/bleachbit/blob/master/windows/msys-install.ps1
 cache_dir = Path.home().joinpath(".cache").joinpath("msys2_env")
 rel_date = "2024-12-08"
 rel_fn = "msys2-base-x86_64-20241208.sfx.exe"
@@ -22,7 +23,6 @@ release = cache_dir.joinpath(rel_date)
 
 
 def download_msys():
-    # ref: https://github.com/bleachbit/bleachbit/blob/master/windows/msys-install.ps1
     url = f"https://github.com/msys2/msys2-installer/releases/download/{rel_date}/{rel_fn}"
 
     cache_dir.mkdir(exist_ok=True, parents=True)
@@ -74,13 +74,21 @@ def install_packages():
 
 def venv_install_packages(venv_path: Path):
     venv_msys2_command(
-        "pacman -S --needed --noconfirm msys/fish ucrt64/mingw-w64-ucrt-x86_64-python"
+        "pacman -S --needed --noconfirm msys/fish ucrt64/mingw-w64-ucrt-x86_64-python",
+        venv_path=venv_path,
     )
 
 
 def creat_py_venv(venv_path: Path):
     with CD(venv_path):
         venv_msys2_command("python -m venv .", venv_path=venv_path)
+
+
+def init_wrapper(venv_path: Path):
+    from msys2_env.shell_wrapper import create_scripts_alias, create_shell_wrapper
+
+    create_scripts_alias(venv_path=venv_path)
+    create_shell_wrapper(venv_path=venv_path)
 
 
 def create_venv(venv_path: Path):
@@ -91,6 +99,7 @@ def create_venv(venv_path: Path):
         shutil.copytree(msys_folder, venv_path.joinpath("data"))
     if not venv_path.joinpath("bin").exists():
         creat_py_venv(venv_path)
+        init_wrapper(venv_path)
 
 
 def main():
@@ -101,6 +110,13 @@ def main():
 
     parser.add_argument("--venv", type=str, default=".venv2", help="venv name")
 
+    parser.add_argument(
+        "--wrapper",
+        action="store_true",
+        default=False,
+        help="reinstall the shell wrapper",
+    )
+
     args = parser.parse_args()
 
     if args.init:
@@ -110,6 +126,12 @@ def main():
     venv_path = Path(os.getcwd()).resolve().joinpath(args.venv)
     create_venv(venv_path)
     # venv_install_packages(venv_path)
+
+    if args.wrapper:
+        from msys2_env.shell_wrapper import create_scripts_alias, create_shell_wrapper
+
+        create_scripts_alias(venv_path=venv_path, force=True)
+        create_shell_wrapper(venv_path=venv_path, force=True)
 
 
 if __name__ == "__main__":

@@ -18,6 +18,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.sdist]
 packages = ["msys2_env"]
+include = ["*.exe", "*.ps1"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["msys2_env"]
+include = ["*.exe", "*.ps1"]
