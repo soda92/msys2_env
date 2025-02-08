@@ -5,7 +5,7 @@ function Print_Help {
     param (
         [string]$ScriptName
     )
-  
+
     Write-Host "Usage:"
     Write-Host "    $ScriptName [options] [login shell parameters]"
     Write-Host ""
@@ -29,11 +29,11 @@ function Print_Help {
     Write-Host "Any parameter that cannot be treated as valid option and all"
     Write-Host "following parameters are passed as login shell command parameters."
     Write-Host ""
-  
+
     exit 0
 }
-  
-  
+
+
 # Helper Function to remove quotes from a string
 function Remove-Quotes {
     param(
@@ -41,12 +41,12 @@ function Remove-Quotes {
     )
     return $InputString -replace '"', ''
 }
-  
+
 # Helper function for ConEmu detection
-function Detect-ConEmu {
+function Detect_ConEmu {
     $ComEmuCommand = $null
     $MSYSCON = $null
-  
+
     if ($env:ConEmuDir) {
         if (Test-Path "$($env:ConEmuDir)\ConEmu64.exe") {
             $ComEmuCommand = "$($env:ConEmuDir)\ConEmu64.exe"
@@ -57,7 +57,7 @@ function Detect-ConEmu {
             $MSYSCON = "conemu.exe"
         }
     }
-  
+
     if (-not $ComEmuCommand) {
         if ($(ConEmu64.exe /Exit 2>&1) -match "ConEmu" ) {
             # Crude test, but checks if the command *exists*.
@@ -69,7 +69,7 @@ function Detect-ConEmu {
             $MSYSCON = "conemu.exe"
         }
     }
-      
+
     if (-not $ComEmuCommand) {
         $regEntry = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\ConEmu64.exe" -Name "(default)" -ErrorAction SilentlyContinue
         if ($regEntry) {
@@ -82,24 +82,33 @@ function Detect-ConEmu {
                 $ComEmuCommand = $regEntry."(default)"
                 $MSYSCON = "conemu.exe"
             }
-  
+
         }
     }
-  
+
     if (-not $ComEmuCommand) {
         Write-Error "ConEmu not found."
         exit 1
     }
-  
+
     return @{
         Command = $ComEmuCommand
         MSYSCON = $MSYSCON
     }
 }
-  
-  
+
+function startsh() {
+    if (-not $MSYS2_NOSTART) {
+        Start-Process -FilePath "$WD\$LOGINSHELL" -ArgumentList "-l $shellArgsString" -WindowStyle Minimized
+    }
+    else {
+        & "$WD\$LOGINSHELL" -l $shellArgsString
+    }
+    exit $LASTEXITCODE
+}
+
 # Main script logic
-  
+
 $WD = $PWD.Path
 if (-not (Test-Path -Path "$WD\msys-2.0.dll")) {
     $WD = "$($PSScriptRoot)\usr\bin\"  # Use script's directory if msys-2.0.dll is missing.
@@ -110,49 +119,48 @@ $MSYS2_PATH_TYPE = $null  #  Keep it undefined initially
 $CHERE_INVOKING = $null # Keep undefined initially
 $MSYS2_NOSTART = $false  # Default is to *use* start.
 $SHELL_ARGS = @()
-  
+
 # Parse command-line arguments
-$argsList = New-Object System.Collections.Generic.List[string]
-$argsList.AddRange($args)
-  
+$argsList = $args
+
 $i = 0
 while ($i -lt $argsList.Count) {
     $arg = $argsList[$i]
-  
+
     switch ($arg) {
-        { -help -or --help -or -? -or /? } {
-            Print-Help $MyInvocation.MyCommand.Name
+        { "-help" -or "--help" -or "-?" -or "/?" } {
+            Print_Help $MyInvocation.MyCommand.Name
             exit 0
         }
-        { -msys -or -msys2 } {
+        { "-msys" -or "-msys2" } {
             $MSYSTEM = "MSYS"
             $msys2_shiftCounter++
         }
-        { -mingw32 } {
+       { "-mingw32" } {
             $MSYSTEM = "MINGW32"
             $msys2_shiftCounter++
         }
-        { -mingw64 } {
+       { "-mingw64" } {
             $MSYSTEM = "MINGW64"
             $msys2_shiftCounter++
         }
-        { -ucrt64 } {
+       { "-ucrt64" } {
             $MSYSTEM = "UCRT64"
             $msys2_shiftCounter++
         }
-        { -clang64 } {
+       { "-clang64" } {
             $MSYSTEM = "CLANG64"
             $msys2_shiftCounter++
         }
-        { -clang32 } {
+       { "-clang32" } {
             $MSYSTEM = "CLANG32"
             $msys2_shiftCounter++
         }
-        { -clangarm64 } {
+       { "-clangarm64" } {
             $MSYSTEM = "CLANGARM64"
             $msys2_shiftCounter++
         }
-        { -mingw } {
+       { "-mingw" } {
             $msys2_shiftCounter++
             if (Test-Path "$WD\..\..\mingw64") {
                 $MSYSTEM = "MINGW64"
@@ -161,34 +169,34 @@ while ($i -lt $argsList.Count) {
                 $MSYSTEM = "MINGW32"
             }
         }
-        { -mintty } {
+       { "-mintty" } {
             $MSYSCON = "mintty.exe"
             $msys2_shiftCounter++
         }
-        { -conemu } {
-            $MSYSCON = "conemu"  # We'll refine this in Detect-ConEmu
+        { "-conemu" } {
+            $MSYSCON = "conemu"  # We'll refine this in Detect_ConEmu
             $msys2_shiftCounter++
         }
-        { -defterm } {
+        { "-defterm" } {
             $MSYSCON = "defterm"
             $msys2_shiftCounter++
         }
-        { -full-path -or -use-full-path } {
+        { "-full-path" -or "-use-full-path" } {
             $MSYS2_PATH_TYPE = "inherit"
             $msys2_shiftCounter++
         }
-        { -here } {
+        { "-here" } {
             $CHERE_INVOKING = "enabled_from_arguments"
             $msys2_shiftCounter++
         }
-        { -where } {
+        { "-where" } {
             $i++
             if ($i -ge $argsList.Count -or [string]::IsNullOrWhiteSpace($argsList[$i])) {
                 Write-Error "Working directory is not specified for -where parameter."
                 exit 2
             }
             $targetDir = $argsList[$i]
-  
+
             if (-not (Test-Path -Path $targetDir)) {
                 Write-Error "Cannot set specified working directory '$targetDir'."
                 exit 2
@@ -198,11 +206,11 @@ while ($i -lt $argsList.Count) {
             $CHERE_INVOKING = "enabled_from_arguments"
             $msys2_shiftCounter += 2  # -where and the directory
         }
-        { -no-start } {
+        { "-no-start" } {
             $MSYS2_NOSTART = $true
             $msys2_shiftCounter++
         }
-        { -shell } {
+        { "-shell" } {
             $i++
             if ($i -ge $argsList.Count -or [string]::IsNullOrWhiteSpace($argsList[$i])) {
                 Write-Error "Shell not specified for -shell parameter."
@@ -214,18 +222,18 @@ while ($i -lt $argsList.Count) {
         Default {
             # Collect remaining args
             break; # Stop processing options, the rest are shell arguments.
-  
+
         }
     }
     $i++
 }
-  
+
 # Collect remaining arguments for the shell
 for ($j = $i; $j -lt $argsList.Count; $j++) {
     $SHELL_ARGS += $argsList[$j]
 }
-  
-  
+
+
 # Set title and icon
 if ($MSYSTEM -eq "MINGW32") {
     $CONTITLE = "MinGW x32"
@@ -255,17 +263,17 @@ else {
     $CONTITLE = "MSYS2 MSYS"
     $CONICON = "msys2.ico"
 }
-  
-  
+
+
 # Handle terminal selection and execution
 $shellArgsString = [string]::Join(" ", ($SHELL_ARGS | ForEach-Object { if ($_ -match '\s') { '"{0}"' -f $_ } else { $_ } })) # Quote args with spaces
-  
+
 if ($MSYSCON -eq "mintty.exe") {
     if (-not (Test-Path -Path "$WD\mintty.exe")) {
         Write-Warning "mintty.exe not found, falling back to default shell."
         startsh
     }
-  
+
     if (-not $MSYS2_NOSTART) {
         Start-Process -FilePath "$WD\mintty" -ArgumentList "-i `"/$CONICON`"", "-t `"$CONTITLE`"", `"/usr/bin/$LOGINSHELL`" -l $shellArgsString -WindowStyle Minimized
     }
@@ -274,27 +282,17 @@ if ($MSYSCON -eq "mintty.exe") {
     }
     exit $LASTEXITCODE
 }
-  
+
 if ($MSYSCON -eq "conemu") {
-    $conEmuInfo = Detect-ConEmu
+    $conEmuInfo = Detect_ConEmu
     $ComEmuCommand = $conEmuInfo.Command
     $MSYSCON = $conEmuInfo.MSYSCON
-  
+
     if (-not $MSYS2_NOSTART) {
         Start-Process -FilePath $ComEmuCommand -ArgumentList "/Here", "/Icon `"$WD\..\..\$CONICON`", "/cmd `"$WD\$LOGINSHELL`" -l $shellArgsString  -WindowStyle Minimized
     }
     else {
         & $ComEmuCommand /Here /Icon "$WD\..\..\$CONICON" /cmd "$WD\$LOGINSHELL" -l $shellArgsString
-    }
-    exit $LASTEXITCODE
-}
-  
-function startsh() {
-    if (-not $MSYS2_NOSTART) {
-        Start-Process -FilePath "$WD\$LOGINSHELL" -ArgumentList "-l $shellArgsString" -WindowStyle Minimized
-    }
-    else {
-        & "$WD\$LOGINSHELL" -l $shellArgsString
     }
     exit $LASTEXITCODE
 }
