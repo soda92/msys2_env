@@ -1,19 +1,7 @@
 version = 1
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 
 [[package]]
 name = "msys2-env"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "winshell" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "winshell", specifier = ">=0.6" }]
-
-[[package]]
-name = "winshell"
-version = "0.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/91/3f/d23d248029a49042d278af9c86b53bc90845e3739a0d7493e00cbac0e4cd/winshell-0.6.zip", hash = "sha256:16812fcd6a43391d6c0b707b4d67e809e52286a739683a91623baa0804ea0d41", size = 10070 }
+version = "2025.2.8.0"
+source = { editable = "." }
