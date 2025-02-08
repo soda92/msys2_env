@@ -15,6 +15,7 @@ def CD(d: Path):
 
 
 CURRENT = Path(__file__).resolve().parent
+# ref: https://github.com/bleachbit/bleachbit/blob/master/windows/msys-install.ps1
 cache_dir = Path.home().joinpath(".cache").joinpath("msys2_env")
 rel_date = "2024-12-08"
 rel_fn = "msys2-base-x86_64-20241208.sfx.exe"
@@ -22,7 +23,6 @@ release = cache_dir.joinpath(rel_date)
 
 
 def download_msys():
-    # ref: https://github.com/bleachbit/bleachbit/blob/master/windows/msys-install.ps1
     url = f"https://github.com/msys2/msys2-installer/releases/download/{rel_date}/{rel_fn}"
 
     cache_dir.mkdir(exist_ok=True, parents=True)
