@@ -84,6 +84,13 @@ def creat_py_venv(venv_path: Path):
         venv_msys2_command("python -m venv .", venv_path=venv_path)
 
 
+def init_wrapper(venv_path: Path):
+    from msys2_env.shell_wrapper import create_scripts_alias, create_shell_wrapper
+
+    create_scripts_alias(venv_path=venv_path)
+    create_shell_wrapper(venv_path=venv_path)
+
+
 def create_venv(venv_path: Path):
     if not venv_path.exists():
         venv_path.mkdir(parents=True)
@@ -92,6 +99,7 @@ def create_venv(venv_path: Path):
         shutil.copytree(msys_folder, venv_path.joinpath("data"))
     if not venv_path.joinpath("bin").exists():
         creat_py_venv(venv_path)
+        init_wrapper(venv_path)
 
 
 def main():
@@ -102,6 +110,13 @@ def main():
 
     parser.add_argument("--venv", type=str, default=".venv2", help="venv name")
 
+    parser.add_argument(
+        "--wrapper",
+        action="store_true",
+        default=False,
+        help="reinstall the shell wrapper",
+    )
+
     args = parser.parse_args()
 
     if args.init:
@@ -111,6 +126,9 @@ def main():
     venv_path = Path(os.getcwd()).resolve().joinpath(args.venv)
     create_venv(venv_path)
     # venv_install_packages(venv_path)
+
+    if args.wrapper:
+        init_wrapper(venv_path)
 
 
 if __name__ == "__main__":
