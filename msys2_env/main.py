@@ -128,7 +128,10 @@ def main():
     # venv_install_packages(venv_path)
 
     if args.wrapper:
-        init_wrapper(venv_path)
+        from msys2_env.shell_wrapper import create_scripts_alias, create_shell_wrapper
+
+        create_scripts_alias(venv_path=venv_path, force=True)
+        create_shell_wrapper(venv_path=venv_path, force=True)
 
 
 if __name__ == "__main__":
