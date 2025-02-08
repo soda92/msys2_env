@@ -11,14 +11,19 @@ def str_path(p: Path):
 
 def create_shell_wrapper(venv_path: Path, force=False):
     fish_ps1 = CURRENT.joinpath("fish.ps1")
-    target = venv_path.joinpath(fish_ps1.name)
-    if not force:
-        if not target.exists():
-            shutil.copy(fish_ps1, venv_path)
-    else:
-        if target.exists():
-            target.unlink()
-        shutil.copy(fish_ps1, venv_path)
+    bash_ps1 = CURRENT.joinpath("bash.ps1")
+
+    def copy_impl(file: Path):
+        target = venv_path.joinpath(file.name)
+        if not force:
+            if not target.exists():
+                shutil.copy(file, venv_path)
+        else:
+            if target.exists():
+                target.unlink()
+            shutil.copy(file, venv_path)
+    copy_impl(fish_ps1)
+    copy_impl(bash_ps1)
 
 
 def fix_content(scripts_dir: Path):
