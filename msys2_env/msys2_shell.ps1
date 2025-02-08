@@ -15,7 +15,7 @@ $msys2_shiftCounter = 0
 # $env:MSYS2_PATH_TYPE = "inherit"
 
 # Function to print help
-function Print-Help {
+function Print_Help {
     param([string]$ScriptName)
     Write-Host "Usage:"
     Write-Host "    $ScriptName [options] [login shell parameters]"
@@ -42,15 +42,15 @@ function Print-Help {
 }
 
 # Process command-line arguments
-$args = $MyInvocation.MyCommand.Parameters.Values  # Get all arguments
-$remainingArgs = @()
 
-foreach ($arg in $args) {
+$Arguments = $args
+
+foreach ($arg in $Arguments) {
     switch -Wildcard ($arg) {
         "-help" { Print-Help $MyInvocation.MyCommand.MyCommand.Name; exit 0 }
         "--help" { Print-Help $MyInvocation.MyCommand.MyCommand.Name; exit 0 }
-         "-?"{ Print-Help $MyInvocation.MyCommand.MyCommand.Name; exit 0 }
-          "/?" { Print-Help $MyInvocation.MyCommand.MyCommand.Name; exit 0 }
+        "-?" { Print-Help $MyInvocation.MyCommand.MyCommand.Name; exit 0 }
+        "/?" { Print-Help $MyInvocation.MyCommand.MyCommand.Name; exit 0 }
         "-msys" { $msys2_shiftCounter++; $env:MSYSTEM = "MSYS"; }
         "-msys2" { $msys2_shiftCounter++; $env:MSYSTEM = "MSYS"; }
         "-mingw32" { $msys2_shiftCounter++; $env:MSYSTEM = "MINGW32"; }
@@ -63,13 +63,14 @@ foreach ($arg in $args) {
         "-mintty" { $msys2_shiftCounter++; $env:MSYSCON = "mintty.exe"; }
         "-conemu" { $msys2_shiftCounter++; $env:MSYSCON = "conemu"; }
         "-defterm" { $msys2_shiftCounter++; $env:MSYSCON = "defterm"; }
-        "-full-path" | "-use-full-path" { $msys2_shiftCounter++; $env:MSYS2_PATH_TYPE = "inherit"; }
+        "-full-path" { $msys2_shiftCounter++; $env:MSYS2_PATH_TYPE = "inherit"; }
+        "-use-full-path" { $msys2_shiftCounter++; $env:MSYS2_PATH_TYPE = "inherit"; }
         "-here" { $msys2_shiftCounter++; $env:CHERE_INVOKING = "enabled_from_arguments"; }
         "-where" {
             $msys2_shiftCounter++;
-            if ($args[$args.IndexOf($arg) + 1]) {
+            if ($Arguments[$Arguments.IndexOf($arg) + 1]) {
                 # Check for next argument
-                $dir = $args[$args.IndexOf($arg) + 1]
+                $dir = $Arguments[$Arguments.IndexOf($arg) + 1]
                 if (Test-Path $dir) {
                     Set-Location -Path $dir
                     $env:CHERE_INVOKING = "enabled_from_arguments"
@@ -85,14 +86,14 @@ foreach ($arg in $args) {
                 exit 2
             }
             # Remove the processed -where and directory arguments
-            $args = $args | Where-Object { $_ -ne $arg -and $_ -ne $dir }
+            $Arguments = $Arguments | Where-Object { $_ -ne $arg -and $_ -ne $dir }
             continue  # Skip to the next argument
         }
         "-no-start" { $msys2_shiftCounter++; $env:MSYS2_NOSTART = "yes"; }
         "-shell" {
             $msys2_shiftCounter++;
-            if ($args[$args.IndexOf($arg) + 1]) {
-                $LOGINSHELL = $args[$args.IndexOf($arg) + 1]
+            if ($Arguments[$Arguments.IndexOf($arg) + 1]) {
+                $LOGINSHELL = $args[$Arguments.IndexOf($arg) + 1]
                 $msys2_shiftCounter++ # Increment for the shell argument
             }
             else {
@@ -100,7 +101,7 @@ foreach ($arg in $args) {
                 exit 2
             }
             # Remove the -shell and shell arguments
-            $args = $args | Where-Object { $_ -ne $arg -and $_ -ne $LOGINSHELL }
+            $Arguments = $Arguments | Where-Object { $_ -ne $arg -and $_ -ne $LOGINSHELL }
             continue  # Skip to the next argument
         }
         default { $remainingArgs += $arg } # Collect remaining arguments
