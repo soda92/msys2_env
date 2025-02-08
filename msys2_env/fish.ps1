@@ -1,2 +1,2 @@
 $Env:MSYSTEM = "ucrt64"
-& "$PSScriptRoot/data/usr/bin/fish.exe" -l
+& "$PSScriptRoot/data/usr/bin/fish.exe" -l $args
