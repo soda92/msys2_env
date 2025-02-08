@@ -3,6 +3,16 @@ import subprocess
 import argparse
 import os
 import shutil
+import contextlib
+
+
+@contextlib.contextmanager
+def CD(d: Path):
+    cwd = os.getcwd()
+    os.chdir(d)
+    yield
+    os.chdir(cwd)
+
 
 CURRENT = Path(__file__).resolve().parent
 cache_dir = Path.home().joinpath(".cache").joinpath("msys2_env")
@@ -31,35 +41,56 @@ def download_msys():
         )
 
 
+def msys2_command(c, msys2_shell=f"{release}/msys64/msys2_shell.cmd"):
+    commands = [
+        msys2_shell,
+        "-defterm",
+        "-no-start",
+        "-here",
+        "-ucrt64",
+        "-c",
+    ]
+    commands.append(c)
+    subprocess.run(commands, check=True)
+
+
+def venv_msys2_command(c, venv_path: Path):
+    msys2_command(
+        c,
+        msys2_shell=venv_path.joinpath("data/msys2_shell.cmd"),
+    )
+
+
 def init():
-    msys2_shell = f"{release}/msys64/msys2_shell.cmd"
-
-    def msys2_command(c):
-        msys2_base_command = [
-            msys2_shell,
-            "-defterm",
-            "-no-start",
-            "-here",
-            "-ucrt64",
-            "-c",
-        ]
-        msys2_base_command.append(c)
-        ret = msys2_base_command
-        return ret
-
-    subprocess.run(msys2_command("bash -c exit"), check=True)
+    msys2_command("bash -c exit")
+    install_packages()
 
 
-def create_venv(name: str):
-    cwd = os.getcwd()
-    venv_path = Path(cwd).resolve().joinpath(name)
-    if venv_path.exists():
-        # print("Err: venv already exists")
-        exit()
-    venv_path.mkdir(parents=True)
-    msys_folder = release.joinpath("msys64")
+def install_packages():
+    msys2_command(
+        "pacman -S --needed --noconfirm msys/fish ucrt64/mingw-w64-ucrt-x86_64-python"
+    )
 
-    shutil.copytree(msys_folder, venv_path.joinpath("data"))
+
+def venv_install_packages(venv_path: Path):
+    venv_msys2_command(
+        "pacman -S --needed --noconfirm msys/fish ucrt64/mingw-w64-ucrt-x86_64-python"
+    )
+
+
+def creat_py_venv(venv_path: Path):
+    with CD(venv_path):
+        venv_msys2_command("python -m venv .", venv_path=venv_path)
+
+
+def create_venv(venv_path: Path):
+    if not venv_path.exists():
+        venv_path.mkdir(parents=True)
+        msys_folder = release.joinpath("msys64")
+
+        shutil.copytree(msys_folder, venv_path.joinpath("data"))
+    if not venv_path.joinpath("bin").exists():
+        creat_py_venv(venv_path)
 
 
 def main():
@@ -76,7 +107,9 @@ def main():
         download_msys()
         init()
 
-    create_venv(args.venv)
+    venv_path = Path(os.getcwd()).resolve().joinpath(args.venv)
+    create_venv(venv_path)
+    # venv_install_packages(venv_path)
 
 
 if __name__ == "__main__":

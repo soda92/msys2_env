@@ -13,6 +13,20 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
+        },
+        {
+            "name": "main: venv3",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/msys2_env/main.py",
+            "console": "integratedTerminal",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "args": [
+                "--venv",
+                ".venv3"
+            ]
         }
     ]
 }
