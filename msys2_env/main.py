@@ -74,7 +74,8 @@ def install_packages():
 
 def venv_install_packages(venv_path: Path):
     venv_msys2_command(
-        "pacman -S --needed --noconfirm msys/fish ucrt64/mingw-w64-ucrt-x86_64-python"
+        "pacman -S --needed --noconfirm msys/fish ucrt64/mingw-w64-ucrt-x86_64-python",
+        venv_path=venv_path,
     )
 
 
