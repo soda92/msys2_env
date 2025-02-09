@@ -95,6 +95,7 @@ def create_venv(venv_path: Path):
     if not venv_path.exists():
         venv_path.mkdir(parents=True)
         msys_folder = release.joinpath("msys64")
+        venv_path.joinpath(".gitignore").write_text("*\n", encoding="utf8")
 
         shutil.copytree(msys_folder, venv_path.joinpath("data"))
     if not venv_path.joinpath("bin").exists():

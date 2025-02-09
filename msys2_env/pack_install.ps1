@@ -7,4 +7,4 @@ foreach ($arg in $args) {
 
 $command += $list -join " "
 
-fish -c $command
+& "$PSScriptRoot/fish.ps1" -c $command
