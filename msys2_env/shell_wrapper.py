@@ -9,21 +9,45 @@ def str_path(p: Path):
     return s.replace("\\", "/")
 
 
+def file_read(p: Path):
+    content = p.read_text(encoding="utf8")
+    return content
+
+
+def file_write(p: Path, content: str):
+    p.write_text(content, encoding="utf8")
+
+
+def fix_pyenv_cfg(venv_path: Path):
+    cfg = venv_path.joinpath("pyvenv.cfg")
+
+    c = file_read(cfg)
+    c = c.replace(
+        "include-system-site-packages = false", "include-system-site-packages = true"
+    )
+    file_write(cfg, c)
+
+
 def create_shell_wrapper(venv_path: Path, force=False):
     fish_ps1 = CURRENT.joinpath("fish.ps1")
     bash_ps1 = CURRENT.joinpath("bash.ps1")
 
     def copy_impl(file: Path):
-        target = venv_path.joinpath(file.name)
+        target = venv_path.joinpath("bin").joinpath(file.name)
         if not force:
             if not target.exists():
-                shutil.copy(file, venv_path)
+                shutil.copy(file, target)
         else:
             if target.exists():
                 target.unlink()
-            shutil.copy(file, venv_path)
+            shutil.copy(file, target)
+
     copy_impl(fish_ps1)
     copy_impl(bash_ps1)
+    copy_impl(CURRENT.joinpath("pack_install.ps1"))
+    copy_impl(CURRENT.joinpath("pack_remove.ps1"))
+
+    fix_pyenv_cfg(venv_path)
 
 
 def fix_content(scripts_dir: Path):
