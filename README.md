@@ -15,16 +15,18 @@ msys2_env --init
 
 ## usage
 
-`msys2_env`: create a msys2 env in `.venv2`. (the creation need 3-5 minutes.)
+`msys2_env`: create a msys2 env in `venv`. the name can be specified via `--venv [name]`. The creation usually takes 3-5 minutes.
 
 provide venv-like directory:
 
 ![tree directory](https://github.com/soda92/msys2_env/raw/main/image.png)
 
 together with helper scripts:
-- `.venv2/bash`: bash launcher.
-- `.venv2/fish`: fish launcher.
 - `.venv2/Scripts/Activate.ps1`: powershell activation script.
+- `pack_install`: install msys2 packages.
+- `pack_remove`: remove msys2 packages.
+- `bash`: bash launcher.
+- `fish`: fish launcher.
 
 
 ## command line help
