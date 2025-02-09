@@ -108,7 +108,7 @@ def main():
         "--init", action="store_true", default=False, help="download and init msys2"
     )
 
-    parser.add_argument("--venv", type=str, default=".venv2", help="venv name")
+    parser.add_argument("--venv", type=str, default="venv", help="venv name")
 
     parser.add_argument(
         "--wrapper",
