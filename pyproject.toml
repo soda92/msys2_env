@@ -1,16 +1,13 @@
 [project]
 name = "msys2-env"
-version = "2025.2.9.0"
-description = "Create Python virtual environment using MSYS2."
+version = "2025.4.23.0"
+description = "Create Python virtual environment using MSYS2. (Windows only)"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
 
 [project.urls]
 Repository = "https://github.com/soda92/msys2_env"
-
-[project.scripts]
-msys2_env = "msys2_env.main:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -23,3 +20,13 @@ include = ["*.exe", "*.ps1"]
 [tool.hatch.build.targets.wheel]
 packages = ["msys2_env"]
 include = ["*.exe", "*.ps1"]
+
+[dependency-groups]
+dev = [
+    "hatchling>=1.27.0",
+]
+
+[tool.hatch.build.hooks.custom]
+
+[project.scripts]
+msys2_env = "msys2_env.main:main"

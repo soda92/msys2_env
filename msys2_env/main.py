@@ -122,6 +122,7 @@ def main():
     if args.init:
         download_msys()
         init()
+        exit(0)
 
     venv_path = Path(os.getcwd()).resolve().joinpath(args.venv)
     create_venv(venv_path)
